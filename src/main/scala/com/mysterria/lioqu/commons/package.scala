@@ -2,15 +2,15 @@ package com.mysterria.lioqu
 
 import java.util.concurrent.TimeUnit
 import java.time.{Duration => JavaDuration}
-
+import scala.concurrent.duration._
 import scala.collection.generic.CanBuildFrom
 import scala.collection.mutable
-import scala.concurrent.{Await, ExecutionContext, Future, Promise}
-import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.language.implicitConversions
 import scala.reflect.ClassTag
-import scala.util.Try
+import scala.util.{Random, Try}
 import scala.language.higherKinds
+import scala.math.{BigDecimal, abs}
 
 package object commons {
 
@@ -94,5 +94,13 @@ package object commons {
           }
         }
     } map (_.result())
+  }
+
+  /**
+    * @return random delay between min and max.
+    */
+  def delay(min: FiniteDuration, max: FiniteDuration): FiniteDuration = {
+    val diff = abs(max.toMillis - min.toMillis)
+    (Seq(min, max).min.toMillis + BigDecimal(diff * Random.nextDouble).setScale(0, BigDecimal.RoundingMode.HALF_UP).toLong).millis
   }
 }

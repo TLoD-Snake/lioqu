@@ -1,7 +1,6 @@
 package com.mysterria.lioqu.service
 
 import javax.inject.Inject
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
@@ -11,8 +10,8 @@ import com.mysterria.lioqu.config._
 class HttpService @Inject()(
   lifeCycleService: LifeCycleService,
   routes: Routes,
-  @TypesafeConfig(Http_Host) host: String,
-  @TypesafeConfig(Http_Port) port: Int
+  @TypesafeConfig("lioqu.http.host") host: String,
+  @TypesafeConfig("lioqu.http.port") port: Int
 )(implicit as: ActorSystem) {
   private implicit val materializer = ActorMaterializer()
   private implicit val dispatcher = as.dispatcher

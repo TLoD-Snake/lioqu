@@ -22,9 +22,7 @@ class LifeCycleService @Inject()(
   }
 
   as.registerOnTermination {
-    logger.info("Bla-bla, shutting down")
-    Thread.sleep(10000)
-    logger.info("Bla-bla, ok, i'm done")
+    logger.info("Lioqu is terminating, Bye!. =^_^=")
   }
 
   def awaitAllStates: Future[Map[Waitable, Try[Unit]]] = {

@@ -1,6 +1,7 @@
 import scala.language.postfixOps
 
-name := """lioqu-core"""
+name := "lioqu-core"
+organization := "com.mysterria.lioqu"
 
 version := "0.1-SNAPSHOT"
 
