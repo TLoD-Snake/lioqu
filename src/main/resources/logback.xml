@@ -18,7 +18,7 @@
 		</encoder>
 	</appender>
 
-	<logger name="com.example" level="DEBUG"/>
+	<logger name="com.mysterria" level="DEBUG"/>
 
 	<root level="info">
 		<appender-ref ref="CONSOLE" />

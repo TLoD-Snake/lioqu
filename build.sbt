@@ -9,6 +9,12 @@ scalaVersion := "2.11.8"
 scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-explaintypes", "-encoding", "UTF8",
     "-Xlint", "-Xfatal-warnings")
 
+resolvers += "Artifactory" at "http://localhost:8081/artifactory/jcenter"
+publishTo := Some("Artifactory Realm" at "http://localhost:8081/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
+credentials += Credentials(new File("credentials.properties"))
+
+/* ----------------------- Dependencies ------------------- */
+
 val akkaVersion = "2.5.0"
 val akkaHttpVersion = "10.0.5"
 val slickVersion = "3.2.0"
@@ -19,6 +25,7 @@ val guiceVersion = "4.1.0"
 val reflectionsVersion = "0.9.10"
 val jodaVersion = "1.8.1"
 val typesafeconfigVersion = "0.0.3"
+val flywayVersion = "4.2.0"
 
 libraryDependencies ++=  Seq(
   // Akka
@@ -40,6 +47,9 @@ libraryDependencies ++=  Seq(
   "com.github.tminglei" % "slick-pg_2.11" % slickPgVersion,
   "com.github.tminglei" % "slick-pg_play-json_2.11" % slickPgVersion,
   "com.github.tminglei" % "slick-pg_joda-time_2.11" % slickPgVersion,
+
+  // DB: Migrations
+  "org.flywaydb" % "flyway-core" % flywayVersion,
 
   // Logging
   "ch.qos.logback" % "logback-classic" % logBackVersion,

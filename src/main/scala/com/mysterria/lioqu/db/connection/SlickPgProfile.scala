@@ -1,4 +1,4 @@
-package com.mysterria.lioqu.connection
+package com.mysterria.lioqu.db.connection
 
 import com.github.tminglei.slickpg.{ExPostgresProfile, PgDateSupportJoda, PgPlayJsonSupport}
 

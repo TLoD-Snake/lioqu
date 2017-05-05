@@ -9,6 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import net.codingwell.scalaguice.ScalaModule
 import com.mysterria.lioqu.config._
+import com.mysterria.lioqu.db.migration.DBMigrationModule
 
 import scala.concurrent.ExecutionContext
 
@@ -24,9 +25,10 @@ class LioquCoreModule extends LioquModule {
     install(TypesafeConfigModule.fromConfigWithPackage(config, LioquCoreModule.LioquPackage))
     install(TypesafeConfigModule.fromConfigWithPackage(config, config.getString(AppPackage)))
 
-    install(new ServiceModule)
     install(new RepositoryModule)
     install(new HttpModule)
+    install(new ServiceModule)
+    install(new DBMigrationModule(config))
     install(new AppConnectorModule(config))
   }
 

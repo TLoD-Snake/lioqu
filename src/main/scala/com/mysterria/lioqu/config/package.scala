@@ -1,6 +1,7 @@
 package com.mysterria.lioqu
 
 package object config {
+  final val Lioqu = "lioqu"
   final val Prefix = "lioqu."
 
   final val Http_Host = Prefix + "http.host"
