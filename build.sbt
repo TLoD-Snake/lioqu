@@ -41,7 +41,6 @@ lazy val commonSettings = Seq(
     else
       Some("releases" at s"$artifactory/libs-release-local")
   },
-  credentials += Credentials(new File("credentials.properties")),
   publishMavenStyle := true,
 
   mainClass in (Compile, run) := Some("com.mysterria.lioqu.service.Main"),
@@ -114,16 +113,3 @@ lazy val lioqu = Project(id = "lioqu", base = file("."),
     libraryDependencies := mainDependencies(scalaVersion.value)
   )
 ).dependsOn (lioquCore)
-
-
-
-
-
-scalaVersion := "2.11.8"
-scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-explaintypes", "-encoding", "UTF8",
-    "-Xlint", "-Xfatal-warnings")
-
-resolvers += "Artifactory" at "http://localhost:8081/artifactory/jcenter"
-publishTo := Some("Artifactory Realm" at "http://localhost:8081/artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
-credentials += Credentials(new File("credentials.properties"))
-
