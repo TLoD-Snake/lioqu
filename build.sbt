@@ -41,6 +41,7 @@ lazy val commonSettings = Seq(
     else
       Some("releases" at s"$artifactory/libs-release-local")
   },
+  credentials += Credentials(new File("credentials.properties")),
   publishMavenStyle := true,
 
   mainClass in (Compile, run) := Some("com.mysterria.lioqu.service.Main"),
