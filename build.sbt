@@ -1,52 +1,47 @@
-import scala.language.postfixOps
+import sbt.Keys.{javaOptions, publishTo, resolvers}
+import sbt.Resolver
 
-val akkaVersion = "2.5.0"
-val akkaHttpVersion = "10.0.5"
-val slickVersion = "3.2.0"
-val slickPgVersion = "0.15.0-RC"
-val logBackVersion = "1.2.3"
-val playJsonVersion = "2.6.0-M7"
-val guiceVersion = "4.1.0"
-val reflectionsVersion = "0.9.10"
-val jodaVersion = "1.8.1"
-val typesafeconfigVersion = "0.0.3"
-val flywayVersion = "4.2.0"
+import scala.language.postfixOps
 
 lazy val commonSettings = Seq(
   organizationName := "mysterria",
-  organization := "com.mysterria.lioqu",
-  version := "0.1-SNAPSHOT",
-  name := "lioqu",
+  organization := "com.mysterria",
 
-  scalaVersion := "2.12.1",
-  crossScalaVersions := Seq("2.12.1", "2.11.8"),
+  scalaVersion := "2.13.7",
 
-  scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-explaintypes", "-encoding", "UTF8", "-Xlint", "-Xfatal-warnings",
+  scalacOptions ++= Seq(
+    "-feature", "-unchecked", "-deprecation", "-explaintypes", "-encoding", "UTF8",
+    "-Xlint",
+    //"-Xfatal-warnings", // Disabled because of https://github.com/scala/bug/issues/10134
     "-language:implicitConversions",
     "-language:reflectiveCalls",
     "-language:higherKinds",
     "-language:postfixOps",
-    "-language:existentials"),
-
-  resolvers ++= Seq(
-    "mysterria.com artifactory - snapshot" at "http://artifactory.mysterria.com/artifactory/libs-snapshot-local",
-    "mysterria.com artifactory - release" at "http://artifactory.mysterria.com/artifactory/libs-release-local"
+    "-language:existentials"
   ),
-  resolvers += Resolver.mavenLocal,
 
-  publishTo := {
-    val artifactory = "http://artifactory.mysterria.com"
-    if (version.value.trim.endsWith("SNAPSHOT"))
-      Some("snapshots" at s"$artifactory/libs-snapshot-local;build.timestamp=" + new java.util.Date().getTime)
-    else
-      Some("releases" at s"$artifactory/libs-release-local")
-  },
-  credentials += Credentials(new File("credentials.properties")),
-  publishMavenStyle := true,
+  publishMavenStyle := false,
+
+  javaOptions in Test ++=
+      collection.JavaConverters.propertiesAsScalaMap(System.getProperties)
+    .map{ case (key,value) => "-D" + key + "=" +value }.toSeq,
 
   mainClass in (Compile, run) := Some("com.mysterria.lioqu.service.Main"),
   mainClass in (Compile, packageBin) := Some("com.mysterria.lioqu.service.Main")
 )
+
+/*
+==============================================================================================
+==================== Dependencies ============================================================
+==============================================================================================
+ */
+
+val slickVersion = "3.3.3"
+val slickPgVersion = "0.19.7"
+val akkaVersion = "2.6.17"
+val playJsonVersion = "2.9.2"
+val nettyVersion = "4.1.75.Final"
+
 
 def mainDependencies(scalaVersion: String) = {
   val extractedLibs = CrossVersion.partialVersion(scalaVersion) match {
@@ -56,61 +51,160 @@ def mainDependencies(scalaVersion: String) = {
       Seq() // Use proprietary Future extensions for scala 2.11
   }
   Seq (
-    // Akka
-    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
-
-    "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion,
-    "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-
-    // JSON
-    "com.typesafe.play" % "play-json_2.11" % playJsonVersion,
-
-    // DB: drivers + Slick core
-    "com.typesafe.slick" % "slick_2.11" % slickVersion,
-    "com.typesafe.slick" % "slick-hikaricp_2.11" % slickVersion,
-    "org.postgresql" % "postgresql" % "9.4.1208.jre7",
-
-    // DB: Slick extensions
-    "com.github.tminglei" % "slick-pg_2.11" % slickPgVersion,
-    "com.github.tminglei" % "slick-pg_play-json_2.11" % slickPgVersion,
-    "com.github.tminglei" % "slick-pg_joda-time_2.11" % slickPgVersion,
-
-    // DB: Migrations
-    "org.flywaydb" % "flyway-core" % flywayVersion,
-
     // Logging
-    "ch.qos.logback" % "logback-classic" % logBackVersion,
-    "com.typesafe.scala-logging" % "scala-logging_2.11" % "3.5.0",
+    "ch.qos.logback"                %  "logback-classic"        % "1.2.6",
+    "com.typesafe.scala-logging"    %% "scala-logging"          % "3.9.4",
+    "com.github.dwickern"           %% "scala-nameof"           % "3.0.0" % "provided",
 
-    // Guice DI Container
-    "net.codingwell" % "scala-guice_2.11" % guiceVersion,
-
-    // Time and Date
-    "org.joda" % "joda-convert" % jodaVersion,
-
-    // Guice injected Config
-    "com.github.racc" % "typesafeconfig-guice" % typesafeconfigVersion,
-
-    // Reflections
-    "org.reflections" % "reflections" % reflectionsVersion
+    "org.scalatest" %% "scalatest" % "3.2.10" % Test,
+    "org.mockito" %% "mockito-scala" % "1.16.46" % Test
   ) ++ extractedLibs
 }
 
-lazy val lioquCore = Project(id = "lioqu-core", base = file("./core"),
-  settings = Defaults.coreDefaultSettings ++ commonSettings ++ Seq(
-    name := "lioqu-core",
-    description := "Core of Lioqu Microservice Framework",
+/**
+  * This project is neither aggregated by the root Lioqu project nor published as an artifact.
+  */
+//lazy val utilsLang = (project in file("lioqu-utils-lang"))
+//  .settings(
+//    commonSettings,
+//    name := "lioqu-utils-lang",
+//    description := "Macros project for Lioqu Microservice Framework"
+//  )
+
+lazy val commons = (project in file("lioqu-utils-commons"))
+  .settings(
+    commonSettings,
+    name := "lioqu-utils-commons",
+    description := "Common utils library for Lioqu Microservice Framework",
     libraryDependencies := Seq(
-      // add deps here
+
+      "javax.inject"        %  "javax.inject" % "1",
+      "commons-codec"       %  "commons-codec"  % "1.15",
+
+      "com.typesafe.play" %% "play-json"    % playJsonVersion,
+      "com.typesafe.akka" %% "akka-actor"   % akkaVersion
     ) ++ mainDependencies(scalaVersion.value)
   )
-)
 
-lazy val lioqu = Project(id = "lioqu", base = file("."),
-  settings = Defaults.coreDefaultSettings ++ commonSettings ++ Seq(
-    name := "lioqu",
-    description := "Lioqu Microservice Framework",
-    libraryDependencies := mainDependencies(scalaVersion.value)
+lazy val utilsDi = project
+  .settings(
+    commonSettings,
+    name := "lioqu-utils-di",
+    description := "DI dependencies",
+    libraryDependencies := Seq(
+      // DI - Guice
+      "com.google.inject"             %  "guice"                          % "5.0.1",
+      "com.google.inject.extensions"  %  "guice-assistedinject"           % "5.0.1",
+      "net.codingwell"                %% "scala-guice"                    % "5.0.2"
+    ) ++ mainDependencies(scalaVersion.value)
   )
-).dependsOn (lioquCore)
+
+lazy val utilsHttpCli = (project in file("lioqu-utils-httpcli"))
+  .settings(
+    commonSettings,
+    name := "lioqu-utils-httpcli",
+    description := "HTTP Client based on Dispatch library",
+    libraryDependencies := Seq(
+      "org.dispatchhttp"            %% "dispatch-core"                  % "1.2.0"
+    ) ++ mainDependencies(scalaVersion.value)
+  ).dependsOn(commons)
+
+lazy val core = (project in file("lioqu-core"))
+  .settings(
+    commonSettings,
+     name := "lioqu-core",
+    description := "Core of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      // Reflections
+      "org.reflections" % "reflections" % "0.10.2"
+    ) ++ mainDependencies(scalaVersion.value)
+  ).dependsOn(commons, utilsDi)
+
+lazy val http = (project in file("lioqu-http"))
+  .settings(
+    commonSettings,
+    name := "lioqu-http",
+    description := "HTTP module of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      "com.typesafe.akka" %% "akka-stream"  % akkaVersion,
+      "com.typesafe.akka" %% "akka-http"    % "10.2.7"
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(core)
+
+lazy val dbCore = (project in file("lioqu-db-core"))
+  .settings(
+    commonSettings,
+    name := "lioqu-db-core",
+    description := "Core DB module of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      // DB: drivers + Slick core
+      "com.typesafe.slick" %% "slick"          % slickVersion,
+      "com.typesafe.slick" %% "slick-hikaricp" % slickVersion
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(core)
+
+lazy val dbPostgres = (project in file("lioqu-db-postgres"))
+  .settings(
+    commonSettings,
+    name := "lioqu-db-postgres",
+    description := "Postgres DB module of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      "org.postgresql"      % "postgresql"     % "42.3.1",
+      // DB: Slick extensions
+      "com.github.tminglei" %% "slick-pg"           % slickPgVersion,
+      "com.github.tminglei" %% "slick-pg_play-json" % slickPgVersion,
+      "com.github.tminglei" %% "slick-pg_joda-time" % slickPgVersion
+
+      //"com.jsuereth"        %% "scala-arm"          % "2.0" % Test
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(dbCore)
+
+lazy val dbMysql = (project in file("lioqu-db-mysql"))
+  .settings(
+    commonSettings,
+    name := "lioqu-db-mysql",
+    description := "Mysql DB module of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      "mysql" % "mysql-connector-java" % "8.0.27"
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(dbCore)
+
+lazy val netty = (project in file("lioqu-utils-netty"))
+  .settings(
+    commonSettings,
+    name := "lioqu-utils-netty",
+    description := "Toolbox for using Netty in Scala",
+    libraryDependencies := Seq(
+      "io.netty" % "netty-common" % nettyVersion intransitive()
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(commons)
+/*
+  This subproject is currently not aggregated by Lioqu.
+  Pending for real life usage cases.
+ */
+lazy val dbMigration = (project in file("lioqu-db-migration"))
+  .settings(
+    commonSettings,
+    name := "lioqu-db-migration",
+    description := "DB migrations module of Lioqu Microservice Framework",
+    libraryDependencies := Seq(
+      "org.flywaydb" % "flyway-core" % "8.0.3"
+    ) ++ mainDependencies(scalaVersion.value)
+  )
+  .dependsOn(dbCore, dbPostgres)
+
+lazy val lioqu = (project in file("."))
+  .settings(
+    commonSettings,
+    name := "lioqu",
+    description := "Lioqu Microservice Framework"
+  )
+  .aggregate(
+    commons, utilsHttpCli, utilsDi,
+    core, http, dbCore, dbPostgres, dbMysql
+  )
