@@ -1,12 +1,8 @@
-import sbt.Keys.{javaOptions, publishTo, resolvers}
-import sbt.Resolver
+import sbt.Keys.{javaOptions, publishTo}
 
 import scala.language.postfixOps
 
 lazy val commonSettings = Seq(
-  organizationName := "mysterria",
-  organization := "com.mysterria",
-
   scalaVersion := "2.13.7",
 
   scalacOptions ++= Seq(
@@ -20,14 +16,35 @@ lazy val commonSettings = Seq(
     "-language:existentials"
   ),
 
-  publishMavenStyle := false,
+  // Publishing
+  organizationName := "MYSTERRIA Inc.",
+  organization := "com.mysterria.lioqu",
+  licenses := Seq("MIT License" -> url("http://www.opensource.org/licenses/mit-license.php")),
+  developers := List(Developer(
+    "tlod-snake",
+    "Igor Zinkovsky aka TLoD_Snake",
+    "admin@mysterria.com",
+    url("https://www.mysterria.com")
+  )),
+  scmInfo := Some(ScmInfo(
+    url("http://github.com/TLoD-Snake/lioqu/tree/master"),
+    "scm:git:git://github.com/TLoD-Snake/lioqu.git",
+    "scm:git:ssh://github.com:TLoD-Snake/lioqu.git"
+  )),
+  publishMavenStyle := true,
+  versionScheme := Some("semver-spec"),
+
+  // SBT-Release plugin publish step should call signed publish version
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
+
+  publishTo := {
+    val path = if (isSnapshot.value) "snapshots" else "releases"
+    Some(MavenCache("local-maven", file(s"/home/snake/work/maven-repo/$path")))
+  },
 
   javaOptions in Test ++=
       collection.JavaConverters.propertiesAsScalaMap(System.getProperties)
     .map{ case (key,value) => "-D" + key + "=" +value }.toSeq,
-
-  mainClass in (Compile, run) := Some("com.mysterria.lioqu.service.Main"),
-  mainClass in (Compile, packageBin) := Some("com.mysterria.lioqu.service.Main")
 )
 
 /*
@@ -52,7 +69,7 @@ def mainDependencies(scalaVersion: String) = {
   }
   Seq (
     // Logging
-    "ch.qos.logback"                %  "logback-classic"        % "1.2.6",
+    "ch.qos.logback"                %  "logback-classic"        % "1.2.13",
     "com.typesafe.scala-logging"    %% "scala-logging"          % "3.9.4",
     "com.github.dwickern"           %% "scala-nameof"           % "3.0.0" % "provided",
 
@@ -112,8 +129,10 @@ lazy val utilsHttpCli = (project in file("lioqu-utils-httpcli"))
 lazy val core = (project in file("lioqu-core"))
   .settings(
     commonSettings,
-     name := "lioqu-core",
+    name := "lioqu-core",
     description := "Core of Lioqu Microservice Framework",
+    mainClass in (Compile, run) := Some("com.mysterria.lioqu.service.Main"),
+    mainClass in (Compile, packageBin) := Some("com.mysterria.lioqu.service.Main"),
     libraryDependencies := Seq(
       // Reflections
       "org.reflections" % "reflections" % "0.10.2"

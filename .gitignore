@@ -11,6 +11,7 @@ project/target/*
 target/*
 .idea
 .idea/*
+.bsp
 *.iml
 *.ipr
 *.iws
